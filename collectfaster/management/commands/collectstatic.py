@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
+import multiprocessing
 import time
 
 from django.contrib.staticfiles.management.commands import collectstatic
-from gevent import joinall, monkey, spawn
-from gevent.queue import Queue
 
 
 class Command(collectstatic.Command):
@@ -14,7 +13,7 @@ class Command(collectstatic.Command):
     def __init__(self, *args, **kwargs):
         super(Command, self).__init__(*args, **kwargs)
         self.counter = 0
-        self.gevent_task_queue = Queue()
+        self.task_queue = multiprocessing.JoinableQueue()
 
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
@@ -43,7 +42,7 @@ class Command(collectstatic.Command):
         the queue for later processing.
         """
         if self.faster:
-            self.gevent_task_queue.put({
+            self.task_queue.put({
                 'handler_type': handler_type,
                 'path': path,
                 'prefixed_path': prefixed_path,
@@ -71,19 +70,25 @@ class Command(collectstatic.Command):
         """
         result = super(Command, self).collect()
         if self.faster:
-            monkey.patch_all(thread=False)
-            joinall([spawn(self.gevent_worker) for x in range(self.queue_worker_amount)])
+            processes = []
+            for x in range(self.queue_worker_amount):
+                process = multiprocessing.Process(target=self.worker)
+                process.start()
+                processes.append(process)
+            for process in processes:
+                process.join()
         return result
 
-    def gevent_worker(self):
+    def worker(self):
         """
         Process one task after another by calling the handler (`copy_file` or `copy_link`) method of the super class.
         """
-        while not self.gevent_task_queue.empty():
-            task_kwargs = self.gevent_task_queue.get()
+        while not self.task_queue.empty():
+            task_kwargs = self.task_queue.get()
             handler_type = task_kwargs.pop('handler_type')
 
             if handler_type == 'link':
                 super(Command, self).link_file(**task_kwargs)
             else:
                 super(Command, self).copy_file(**task_kwargs)
+            self.task_queue.task_done()

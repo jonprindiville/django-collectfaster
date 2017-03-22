@@ -3,6 +3,11 @@
 History
 -------
 
+UNRELEASED
+++++++++++
+
+* Use `multiprocessing` instead of `gevent` (to avoid conflicts with `boto3`'s thread use)
+
 0.1.1 (2016-08-08)
 ++++++++++++++++++
 

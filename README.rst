@@ -1,16 +1,24 @@
+Fork fork fork fork!
+--------------------
+
+Forked from `dreipol's repo`_ in order to get out of using ``gevent``. I'm
+looking at using ``django-storages``'s boto3 backend (instead of the older boto
+backend) for uploading to Amazon S3. boto3 uses thread locks for multipart
+up/downloads. Attempting to use dreipol's collectfaster with a boto3 backend
+fails -- gevent throws a ``LoopExit: This operation would block forever`` when
+spawning workers.
+
+An alternate tactic here would be to convince boto3 to not use threads -- I did
+this by messing with ``boto3.s3.inject`` and making all of the
+``TransferConfig()`` calls use ``use_threads=False`` (see `Boto 3 docs`_). I
+didn't see a nice way to configure ``django-storages`` to pass along something
+like that, though.
+
+So, here we are.
+
 ====================
 django-collectfaster
 ====================
-
-|pypi| |status|
-
-.. |pypi| image:: https://badge.fury.io/py/django-collectfaster.png
-    :target: https://badge.fury.io/py/django-collectfaster
-    :alt: Latest Version
-
-.. |status| image:: https://img.shields.io/pypi/dm/django-collectfaster.svg
-    :target: https://pypi.python.org/pypi/django-collectfaster
-    :alt: Downloads
 
 This package extends Django's ``collectstatic`` management command with a ``--faster`` argument that activates the
 parallel file copying. The speed improvement is especially helpful for remote storage backends like S3.
@@ -77,3 +85,5 @@ Tools used in rendering this package:
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`cookiecutter-djangopackage`: https://github.com/pydanny/cookiecutter-djangopackage
+.. _`dreipol's repo`: https://github.com/dreipol/django-collectfaster
+.. _`Boto 3 docs`: http://boto3.readthedocs.io/en/latest/reference/customizations/s3.html#boto3.s3.transfer.TransferConfig

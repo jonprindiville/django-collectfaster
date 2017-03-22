@@ -43,11 +43,11 @@ history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 setup(
     name='django-collectfaster',
     version=version,
-    description="""Parallel file copying for Django's collectstatic.""",
+    description="""Parallel file copying for Django's collectstatic. Forked from dreipol's version to use multiprocessing rather than gevent""",
     long_description=readme + '\n\n' + history,
     author='dreipol GmbH',
     author_email='dev@dreipol.ch',
-    url='https://github.com/dreipol/django-collectfaster',
+    url='https://github.com/jonprindiville/django-collectfaster/',
     packages=[
         'collectfaster',
     ],
@@ -55,8 +55,6 @@ setup(
     install_requires=[
         'django>=1.6',
         'django-storages>=1.5.0',
-        'gevent>=1.1.1',
-        'greenlet>=0.4.9',
     ],
     license="BSD",
     zip_safe=False,
